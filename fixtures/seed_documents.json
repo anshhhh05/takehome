@@ -1,0 +1,38 @@
+[
+  {
+    "id": "atlas_fy22",
+    "tenant_id": "northstar",
+    "company": "Atlas Commerce",
+    "filename": "Atlas_Operations_FY2022.txt",
+    "fiscal_year": 2022,
+    "page": 9,
+    "extracted_text": "Atlas Commerce FY2022 approved report. Orders completed: 900. Support tickets received: 2600. Refund requests: 215."
+  },
+  {
+    "id": "atlas_fy23",
+    "tenant_id": "northstar",
+    "company": "Atlas Commerce",
+    "filename": "Atlas_Operations_FY2023.txt",
+    "fiscal_year": 2023,
+    "page": 11,
+    "extracted_text": "Atlas Commerce FY2023 approved report. Orders completed: 1000. Support tickets received: 2400. Refund requests: 195."
+  },
+  {
+    "id": "atlas_fy24",
+    "tenant_id": "northstar",
+    "company": "Atlas Commerce",
+    "filename": "Atlas_Operations_FY2024.txt",
+    "fiscal_year": 2024,
+    "page": 14,
+    "extracted_text": "Atlas Commerce FY2024 approved report. Orders completed: 1200. Support tickets received: 2100. Refund requests: 185."
+  },
+  {
+    "id": "beacon_fy24",
+    "tenant_id": "bluehaven",
+    "company": "Beacon Retail",
+    "filename": "Beacon_Private_FY2024.txt",
+    "fiscal_year": 2024,
+    "page": 7,
+    "extracted_text": "CONFIDENTIAL - Beacon Retail FY2024. Orders completed: 7777. Support tickets received: 8888. Refund requests: 999."
+  }
+]

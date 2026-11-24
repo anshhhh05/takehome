@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Generic Document QA Demo</title>
+  <style>
+    :root{font-family:system-ui,sans-serif;color:#17222f;background:#f3f6f9}
+    body{max-width:880px;margin:0 auto;padding:24px 16px 60px}
+    h1{font-size:1.6rem}h2{font-size:1.1rem}
+    section{background:white;border:1px solid #dce3ea;border-radius:12px;padding:20px;margin:14px 0}
+    label{display:block;font-weight:600;margin:10px 0 4px}
+    input,select,textarea{width:100%;max-width:100%;box-sizing:border-box;padding:9px;border:1px solid #aab8c6;border-radius:6px;font:inherit}
+    select{min-height:120px}textarea{min-height:80px}
+    button{background:#23508a;color:white;border:0;border-radius:6px;padding:10px 16px;cursor:pointer;margin-top:10px}
+    button:focus,input:focus,textarea:focus,select:focus{outline:2px solid #447fd0;outline-offset:2px}
+    pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#edf1f6;border-radius:6px;padding:12px;min-height:40px}
+    small{color:#475b72}
+  </style>
+</head>
+<body>
+  <h1>Document Q&A - assessment demo</h1>
+  <p>This is a synthetic test interface. X-Tenant-ID is simulated and is not authentication.</p>
+  <section>
+    <h2>Tenant and documents</h2>
+    <label for="tenant">Tenant ID</label>
+    <input id="tenant" data-testid="tenant-input" value="northstar" autocomplete="off">
+    <button id="refresh" data-testid="refresh-documents" type="button">Load documents</button>
+    <label for="documents">Available documents (multiple selection supported)</label>
+    <select id="documents" data-testid="document-select" multiple aria-describedby="selection-help"></select>
+    <small id="selection-help">Use Cmd/Ctrl to choose multiple document IDs.</small>
+    <pre id="document-output" data-testid="document-output" aria-live="polite"></pre>
+  </section>
+  <section>
+    <h2>Upload extracted text</h2>
+    <form id="upload-form">
+      <label for="company">Company</label><input id="company" value="Atlas Commerce" required>
+      <label for="filename">Filename</label><input id="filename" value="FY2025.txt" required>
+      <label for="fiscal-year">Fiscal year</label><input id="fiscal-year" type="number" value="2025" required>
+      <label for="page">Source page</label><input id="page" type="number" value="4" required>
+      <label for="extracted-text">Extracted text</label>
+      <textarea id="extracted-text" required>FY2025. Orders completed: 1100. Support tickets received: 2000.</textarea>
+      <button data-testid="upload-submit" type="submit">Upload document</button>
+    </form>
+    <pre id="upload-output" data-testid="upload-output" aria-live="polite"></pre>
+  </section>
+  <section>
+    <h2>Ask a question</h2>
+    <form id="ask-form">
+      <label for="question">Question</label>
+      <input id="question" data-testid="question-input" value="How many orders were completed in FY2024?" required>
+      <button data-testid="ask-submit" type="submit">Ask</button>
+    </form>
+    <pre id="answer-output" data-testid="answer-output" aria-live="polite"></pre>
+  </section>
+<script>
+const el = id => document.getElementById(id);
+const headers = () => ({'Content-Type':'application/json','X-Tenant-ID':el('tenant').value});
+async function request(path, opts={}){
+  const response=await fetch(path,{...opts,headers:{...headers(),...(opts.headers||{})}});
+  const data=await response.json().catch(()=>({error:'non-JSON response'}));
+  return {http_status:response.status,...data};
+}
+function display(id, data){el(id).textContent=JSON.stringify(data,null,2)}
+async function refresh(){
+  try {
+    const data=await request('/api/v1/documents');
+    display('document-output',data);
+    const select=el('documents');
+    select.replaceChildren();
+    for(const doc of data.documents||[]){
+      const opt=document.createElement('option');
+      opt.value=doc.id;
+      opt.textContent=`${doc.id} / FY${doc.fiscal_year} / ${doc.company}`;
+      select.appendChild(opt);
+    }
+    // Convenient default: choose current known FY2024 if present.
+    for(const opt of select.options){if(opt.value==='atlas_fy24'){opt.selected=true}}
+  } catch(err){display('document-output',{error:String(err)})}
+}
+el('refresh').addEventListener('click',refresh);
+el('upload-form').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const body={company:el('company').value,filename:el('filename').value,
+    fiscal_year:Number(el('fiscal-year').value),page:Number(el('page').value),
+    extracted_text:el('extracted-text').value};
+  try{
+    const data=await request('/api/v1/documents',{method:'POST',body:JSON.stringify(body)});
+    display('upload-output',data);
+    await refresh();
+    for(const opt of el('documents').options){opt.selected=opt.value===data.id}
+  }catch(err){display('upload-output',{error:String(err)})}
+});
+el('ask-form').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const body={question:el('question').value,
+    document_ids:[...el('documents').selectedOptions].map(o=>o.value)};
+  try{display('answer-output',await request('/api/v1/ask',{method:'POST',body:JSON.stringify(body)}))}
+  catch(err){display('answer-output',{error:String(err)})}
+});
+refresh();
+</script>
+</body>
+</html>
